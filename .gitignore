@@ -4,7 +4,6 @@
 /dist/
 /src/*.egg-info/
 /.coverage*
-/.pypirc
 __pycache__/
 *.swp
 *.py[co]
