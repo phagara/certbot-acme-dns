@@ -12,7 +12,7 @@ parameter.
 
 The RFC does not require CAs to fail validation when they don't understand an
 issuance parameter, meaning that unless a particular ACME CA explicitly
-documents supporting and honoring the `accounturi` issueance parameter, it
+documents supporting and honoring the `accounturi` issuance parameter, it
 will be **silently ignored**. Typos in the parameter names are allowed to be
 ignored, too (eg. `accounturl` will render your deployment insecure even when
 the CA fully implements the RFC). See the [RFC complaint forum post] for
