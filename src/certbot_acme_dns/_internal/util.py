@@ -18,10 +18,14 @@ def ca_supports_rfc8657(caa_identity: str) -> bool:
     parameter.
 
     >>> ca_supports_rfc8657("letsencrypt.org")
-    False
+    True
     """
 
-    return caa_identity in ()
+    return caa_identity in (
+        # Let's Encrypt since 2022-12-16
+        # https://community.letsencrypt.org/t/enabling-acme-caa-account-and-method-binding/189588
+        "letsencrypt.org",
+    )
 
 
 def check_cname(source: str, target: str) -> None:
@@ -29,6 +33,9 @@ def check_cname(source: str, target: str) -> None:
         answer = dns.resolver.resolve(source, "CNAME")
     except dns.resolver.NoAnswer as exc:
         raise CnameUnconfigured(f"No CNAME record for {source} found!") from exc
+
+    if answer.rrset is None:
+        raise CnameUnconfigured(f"No CNAME record for {source} found!")
 
     if len(answer.rrset) > 1:
         raise PluginError(f"Multiple CNAME records for {source}: {answer.rrset}")

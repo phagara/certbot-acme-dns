@@ -7,8 +7,9 @@ help of an [acme-dns] proxy server.
 
 ## Warning
 
-No ACME CA currently supports [RFC 8657], namely the `accounturi` issuance
-parameter.
+Your ACME CA must properly implement [RFC 8657], namely the `accounturi`
+issuance parameter. This plugin contains a list of compliant ACME CAs
+and will abort if the chosen CA is not on that list.
 
 The RFC does not require CAs to fail validation when they don't understand an
 issuance parameter, meaning that unless a particular ACME CA explicitly
