@@ -43,7 +43,7 @@ class AcmeDns:
 
         register_url = urljoin(server, "register")
         try:
-            response = requests.post(register_url)
+            response = requests.post(register_url, timeout=30)
         except requests.exceptions.RequestException as exc:
             raise AcmeDnsError(
                 f"Network error while trying to register new ACME DNS account: {exc!s}"
@@ -80,6 +80,7 @@ class AcmeDns:
                     "subdomain": self.account.subdomain,
                     "txt": validation,
                 },
+                timeout=30,
             )
         except requests.exceptions.RequestException as exc:
             raise AcmeDnsError(
