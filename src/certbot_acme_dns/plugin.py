@@ -1,20 +1,62 @@
 """ACME DNS Authenticator plugin for Certbot."""
 import functools
-import inspect
 import logging
 import time
-from typing import Any, Callable, Iterable, List, cast
+from typing import Any, Callable, Iterable, List, Optional, Tuple, Union, cast
 
 import zope.component  # type: ignore
 import zope.interface  # type: ignore
-from acme.client import ClientBase
+
+try:
+    from acme.client import ClientV2
+except ImportError:
+    from acme.client import BaseClient as ClientV2  # type: ignore[attr-defined,no-redef]
+
 from certbot._internal.account import Account, AccountFileStorage
 from certbot._internal.client import acme_from_config_key
 from certbot.display.util import CANCEL, OK
 from certbot.errors import PluginError
-from certbot.interfaces import IAuthenticator, IDisplay, IPluginFactory
+from certbot.interfaces import IAuthenticator, IPluginFactory
 from certbot.plugins.dns_common import DNSAuthenticator
 from certbot.plugins.storage import PluginStorage
+
+try:
+    from certbot.display.util import menu, notification
+except ImportError:
+    from certbot.interfaces import IDisplay  # type: ignore[attr-defined]
+
+    def menu(
+        message: str,
+        choices: Union[List[str], List[Tuple[str, str]]],
+        default: Optional[int] = None,
+        cli_flag: Optional[str] = None,
+        force_interactive: bool = False,
+    ) -> Tuple[str, int]:
+        """Backwards compatibility wrapper for the menu display utility."""
+        return zope.component.getUtility(IDisplay).menu(  # type: ignore[no-any-return]
+            message=message,
+            choices=choices,
+            default=default,
+            cli_flag=cli_flag,
+            force_interactive=force_interactive,
+        )
+
+    def notification(
+        message: str,
+        pause: bool = True,
+        wrap: bool = True,
+        force_interactive: bool = False,
+        decorate: bool = True,
+    ) -> None:
+        """Backwards compatibility wrapper for the notification display utility."""
+        return zope.component.getUtility(IDisplay).notification(  # type: ignore[no-any-return]
+            message=message,
+            pause=pause,
+            wrape=wrap,
+            force_interactive=force_interactive,
+            decorate=decorate,
+        )
+
 
 from ._internal.acme_dns import AcmeDns, AcmeDnsAccount
 from ._internal.caa import CaaSecurityChecker, CaaUnconfigured
@@ -124,7 +166,7 @@ class Authenticator(DNSAuthenticator):
         pass
 
     def _request_dns_config(self, records: Iterable[str]) -> None:
-        zope.component.getUtility(IDisplay).notification(
+        notification(
             (
                 "Please configure the following DNS record(s):\n\t"
                 + "\n\t".join(records)
@@ -136,7 +178,7 @@ class Authenticator(DNSAuthenticator):
         self._wait_dns_propagation()
 
     def _wait_dns_propagation(self) -> None:
-        zope.component.getUtility(IDisplay).notification(
+        notification(
             f"Waiting {self.conf('propagation-seconds')} seconds"
             f" for DNS changes to propagate.",
             pause=False,
@@ -159,7 +201,7 @@ class Authenticator(DNSAuthenticator):
         return storage.load(self.config.account)
 
     @functools.cached_property
-    def _client(self) -> ClientBase:
+    def _client(self) -> ClientV2:
         return acme_from_config_key(self.config, self._account.key)
 
     @functools.cached_property
@@ -175,7 +217,7 @@ class Authenticator(DNSAuthenticator):
         ]
 
         if len(server_accounts) > 1:
-            code, index = zope.component.getUtility(IDisplay).menu(
+            code, index = menu(
                 "Please choose an ACME DNS account",
                 [x.username for x in server_accounts],
                 force_interactive=True,
