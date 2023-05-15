@@ -52,7 +52,7 @@ except ImportError:
         return zope.component.getUtility(IDisplay).notification(  # type: ignore[no-any-return]
             message=message,
             pause=pause,
-            wrape=wrap,
+            wrap=wrap,
             force_interactive=force_interactive,
             decorate=decorate,
         )
